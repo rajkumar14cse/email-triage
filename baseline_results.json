@@ -1,0 +1,24 @@
+{
+  "model": "google/flan-t5-large",
+  "results": [
+    {
+      "task_id": "task_easy_classify",
+      "steps": 10,
+      "episode_score": 0.83,
+      "avg_reward": 0.83
+    },
+    {
+      "task_id": "task_medium_triage",
+      "steps": 10,
+      "episode_score": 0.681,
+      "avg_reward": 0.681
+    },
+    {
+      "task_id": "task_hard_full_triage",
+      "steps": 10,
+      "episode_score": 0.734,
+      "avg_reward": 0.734
+    }
+  ],
+  "overall_score": 0.7483
+}
