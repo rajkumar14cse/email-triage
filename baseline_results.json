@@ -15,10 +15,9 @@
     },
     {
       "task_id": "task_hard_full_triage",
-      "steps": 10,
-      "episode_score": 0.734,
-      "avg_reward": 0.734
+      "episode_score": 0.0,
+      "error": "502 Server Error:  for url: https://email-triage-production-b6bf.up.railway.app/step"
     }
   ],
-  "overall_score": 0.7483
+  "overall_score": 0.5037
 }
