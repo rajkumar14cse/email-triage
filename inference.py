@@ -16,7 +16,15 @@ load_dotenv()
 API_BASE_URL = os.environ.get("API_BASE_URL", "https://router.huggingface.co/openai/v1")
 MODEL_NAME = os.environ.get("MODEL_NAME", "intelligent-classifier")
 HF_TOKEN = os.environ.get("HF_TOKEN", "")
-ENV_URL = os.environ.get("ENV_URL", "http://localhost:8000")
+# For HF Spaces: use localhost:7860 for internal calls
+# External calls would use the Space URL from SPACE_ID
+_hf_space_id = os.environ.get("SPACE_ID", "")
+if _hf_space_id:
+    # Running on HF Spaces - use localhost internally
+    ENV_URL = "http://localhost:7860"
+else:
+    # Local development
+    ENV_URL = os.environ.get("ENV_URL", "http://localhost:7860")
 TASK_IDS = ["task_easy_classify", "task_medium_triage", "task_hard_full_triage"]
 SESSION_ID = f"baseline_{int(time.time())}"
 
