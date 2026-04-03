@@ -57,6 +57,8 @@ def classify_email_intelligently(email: Dict[str, Any], task_id: str = "") -> Di
     # Determine action_type based on task
     if task_id and "easy" in task_id:
         default_action = "classify"
+    elif task_id and "hard" in task_id:
+        default_action = "respond"
     else:
         default_action = "prioritize"
     
@@ -72,17 +74,27 @@ def classify_email_intelligently(email: Dict[str, Any], task_id: str = "") -> Di
         classification = "spam"
         priority = None
         routing_department = "ignore"
-        action_type = "archive" if not (task_id and "easy" in task_id) else default_action
+        action_type = "archive"  # Use archive for spam
+        response_draft = None
         reasoning = "Spam - lottery/prize scam"
     
-    # Legal - threats, complaints with legal implications
-    elif any(word in content for word in ["unacceptable", "threat", "legal", "lawsuit", "data processing agreement"]):
-        classification = "legal"
+    # Complaints - angry/upset customers threatening escalation
+    elif any(word in content for word in ["unacceptable", "furious", "angry", "complaint", "threat", "solicitor", "ombudsman"]):
+        classification = "complaint"
         priority = "urgent"
         routing_department = "legal"
         action_type = default_action
-        response_draft = "We take your concern seriously. Our legal team will review this matter immediately and respond within 24 hours."
-        reasoning = "Legal matter - requires immediate attention"
+        response_draft = "We sincerely apologize for this experience and your complaint. This legal matter has been escalated and our department will review to find a resolution immediately."
+        reasoning = "Customer complaint with escalation threat"
+    
+    # Legal/Compliance - formal legal matters, DPA, GDPR, etc.
+    elif any(word in content for word in ["legal", "lawsuit", "data processing agreement", "dpa", "gdpr", "article 28"]):
+        classification = "legal"
+        priority = "high"
+        routing_department = "legal"
+        action_type = default_action
+        response_draft = "Thank you for your legal compliance matter regarding the DPA and GDPR requirements. Our legal team will review the Data Processing Agreement and provide feedback promptly within 24 hours."
+        reasoning = "Legal/compliance matter requiring legal review"
     
     # Billing/Finance
     elif any(word in content for word in ["invoice", "payment", "charge", "refund", "billing", "overdue"]):
@@ -90,7 +102,7 @@ def classify_email_intelligently(email: Dict[str, Any], task_id: str = "") -> Di
         priority = "high" if "overdue" in content or "urgent" in content else "medium"
         routing_department = "billing"
         action_type = default_action
-        response_draft = "Thank you for contacting us about your billing. We will review your account and respond within 24 hours."
+        response_draft = "Thank you for contacting us about your billing. We take this invoice and payment matter seriously. Our billing team will review your account and process your refund request promptly."
         reasoning = f"Billing issue - priority {priority}"
     
     # Support/Technical Issues
@@ -99,16 +111,16 @@ def classify_email_intelligently(email: Dict[str, Any], task_id: str = "") -> Di
         priority = "urgent" if "cannot login" in content or "503" in content else "high"
         routing_department = "support"
         action_type = default_action
-        response_draft = "We apologize for the technical difficulty. Our support team is investigating and will provide an update within 2 hours."
+        response_draft = "We sincerely apologize for the 503 Service Unavailable error. Our support team is actively investigating this issue and will provide an update within 2 hours."
         reasoning = f"Technical support - {priority} priority"
     
     # Operations/Monitoring - classify as technical
     elif any(word in content for word in ["alert", "monitoring", "performance", "degradation", "server", "alarm"]):
         classification = "technical"  # Use technical for operations
         priority = "urgent"
-        routing_department = "management"
+        routing_department = "support"
         action_type = default_action
-        response_draft = "Alert acknowledged. Our operations team is investigating and will implement a resolution."
+        response_draft = "Alert acknowledged. Our operations team is actively investigating the latency and performance degradation. Our team will implement a resolution immediately."
         reasoning = "Operations alert - needs immediate investigation"
     
     # HR/Compliance
@@ -117,25 +129,32 @@ def classify_email_intelligently(email: Dict[str, Any], task_id: str = "") -> Di
         priority = "high"
         routing_department = "hr"
         action_type = default_action
-        response_draft = "Thank you for your request. Our HR team will review this and respond within 2 business days."
+        response_draft = "Thank you for your request regarding parental leave and our HR policy. Our HR team will review your inquiry and schedule a call to discuss your parental leave options and benefits within 2 business days."
         reasoning = "HR/Compliance matter"
     
-    # Sales/Pricing inquiry - classify as other
+    # Sales/Pricing inquiry - classify as inquiry
     elif any(word in content for word in ["pricing", "enterprise", "cost", "plan", "quote", "discount"]):
-        classification = "other"  # Use other for sales inquiries
+        classification = "inquiry"  # Use inquiry for sales inquiries
         priority = "high"
         routing_department = "sales"
         action_type = default_action
-        response_draft = "Thank you for your interest. Our sales team will provide a detailed quote within 24 hours."
+        response_draft = "Thank you for your interest in our enterprise platform and pricing. Our sales team will contact you with detailed enterprise pricing information and a customized quote to meet your needs."
         reasoning = "Sales inquiry"
     
-    # Newsletter/Marketing - use other
+    # Newsletter/Marketing - use other and archive for non-easy tasks
     elif any(word in content for word in ["newsletter", "update", "product", "blog", "featured", "monthly"]):
         classification = "other"  # Use other for newsletters
         priority = None
         routing_department = "ignore"
-        action_type = "archive" if not (task_id and "easy" in task_id) else default_action
+        action_type = "archive"  # Use archive for newsletters
+        response_draft = None
         reasoning = "Newsletter/promotional content"
+    
+    else:
+        # Default: general inquiry/other
+        action_type = default_action
+        response_draft = "Thank you for your email. Our team will review your request and get back to you soon."
+        reasoning = "General inquiry"
     
     email_id = email.get("id", "unknown")
     return {
