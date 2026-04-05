@@ -35,19 +35,34 @@ print(f"\nUploading files to {REPO_ID}...")
 
 # Key files to upload
 FILES_TO_UPLOAD = [
+    # Root files
     "app.py",
     "inference.py",
     "requirements.txt",
+    "pyproject.toml",
+    "uv.lock",
     "Dockerfile",
     "openenv.yaml",
     "README.md",
+    "LICENSE",
+    # API module
+    "api/__init__.py",
     "api/main.py",
+    # Environment module
+    "env/__init__.py",
     "env/environment.py",
     "env/models.py",
+    # Data module
+    "data/__init__.py",
     "data/emails.py",
+    # Tasks module
+    "tasks/__init__.py",
     "tasks/task_easy.py",
     "tasks/task_medium.py",
     "tasks/task_hard.py",
+    # Server module
+    "server/__init__.py",
+    "server/app.py",
 ]
 
 for file_path in FILES_TO_UPLOAD:

@@ -4,20 +4,21 @@
     {
       "task_id": "task_easy_classify",
       "steps": 10,
-      "episode_score": 0.83,
-      "avg_reward": 0.83
+      "episode_score": 0.8,
+      "avg_reward": 0.8
     },
     {
       "task_id": "task_medium_triage",
       "steps": 10,
-      "episode_score": 0.681,
-      "avg_reward": 0.681
+      "episode_score": 0.765,
+      "avg_reward": 0.765
     },
     {
       "task_id": "task_hard_full_triage",
-      "episode_score": 0.0,
-      "error": "502 Server Error:  for url: https://email-triage-production-b6bf.up.railway.app/step"
+      "steps": 10,
+      "episode_score": 0.845,
+      "avg_reward": 0.845
     }
   ],
-  "overall_score": 0.5037
+  "overall_score": 0.8033
 }
