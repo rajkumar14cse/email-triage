@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "email-triage-env"
+version = "1.0.0"
+description = "Real-world email triage environment for AI agent training"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+keywords = ["openenv", "email", "triage", "ai-agent", "reinforcement-learning"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "fastapi==0.115.0",
+    "uvicorn[standard]==0.30.1",
+    "pydantic==2.9.2",
+    "openai>=2.7.2",
+    "requests==2.32.3",
+    "PyYAML==6.0.2",
+    "python-multipart==0.0.9",
+    "python-dotenv==1.0.0",
+    "openenv-core>=0.2.0",
+]
+
+[project.scripts]
+serve = "server.app:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "black>=23.0",
+    "ruff>=0.1.0",
+]
+
+[project.urls]
+Homepage = "https://huggingface.co/spaces/arjun-ai-dev/email-triage-env"
+Documentation = "https://huggingface.co/spaces/arjun-ai-dev/email-triage-env"
+Repository = "https://huggingface.co/spaces/arjun-ai-dev/email-triage-env"
+Issues = "https://huggingface.co/spaces/arjun-ai-dev/email-triage-env"
+
+[tool.setuptools]
+packages = ["api", "env", "data", "tasks", "server"]
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
