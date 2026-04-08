@@ -5,6 +5,7 @@ import time
 from typing import Any, Dict, List, Optional
 import requests
 from dotenv import load_dotenv
+from openai import OpenAI
 
 # Set UTF-8 encoding
 if sys.stdout.encoding != 'utf-8':
@@ -14,8 +15,22 @@ if sys.stdout.encoding != 'utf-8':
 load_dotenv()
 
 API_BASE_URL = os.environ.get("API_BASE_URL", "https://router.huggingface.co/openai/v1")
+API_KEY = os.environ.get("API_KEY", "sk-dummy-key-for-testing")
 MODEL_NAME = os.environ.get("MODEL_NAME", "intelligent-classifier")
 HF_TOKEN = os.environ.get("HF_TOKEN", "")
+
+# Initialize OpenAI client lazily
+_client = None
+
+def get_client():
+    global _client
+    if _client is None:
+        try:
+            _client = OpenAI(api_key=API_KEY, base_url=API_BASE_URL)
+        except Exception as e:
+            print(f"Warning: Failed to initialize OpenAI client: {e}", flush=True)
+            _client = None
+    return _client
 # For HF Spaces: use localhost:7860 for internal calls
 # External calls would use the Space URL from SPACE_ID
 _hf_space_id = os.environ.get("SPACE_ID", "")
@@ -169,13 +184,76 @@ def classify_email_intelligently(email: Dict[str, Any], task_id: str = "") -> Di
 
 
 def call_llm(observation: Dict[str, Any], task_id: str = "") -> Optional[Dict[str, Any]]:
-    """Process email using intelligent classification instead of LLM API."""
+    """Process email using LLM API through the provided proxy."""
     emails = observation.get("emails", [])
     if not emails:
         return None
     
-    # Use intelligent classification for the first email
-    return classify_email_intelligently(emails[0], task_id)
+    email = emails[0]
+    subject = email.get("subject", "")
+    body = email.get("body", "")
+    sender = email.get("sender", "")
+    
+    # Determine task type
+    if task_id and "easy" in task_id:
+        task_type = "classify"
+    elif task_id and "hard" in task_id:
+        task_type = "respond"
+    else:
+        task_type = "prioritize"
+    
+    prompt = f"""You are an expert email triage system. Analyze the following email and respond in JSON format.
+
+Email Details:
+- From: {sender}
+- Subject: {subject}
+- Body: {body}
+
+Task: {task_type}
+
+Return a JSON object with:
+- action_type: one of [classify, prioritize, respond, archive, skip]
+- classification: one of [spam, complaint, legal, billing, technical, hr, inquiry, other]
+- priority: one of [urgent, high, medium, low, None]
+- routing_department: one of [support, legal, billing, sales, hr, ignore]
+- response_draft: suggested response (up to 200 chars) or null
+- reasoning: brief explanation
+
+Respond ONLY with valid JSON, no additional text."""
+
+    try:
+        client = get_client()
+        if client is None:
+            print("LLM client not available, using fallback classification", flush=True)
+            return classify_email_intelligently(email, task_id)
+            
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are an email triage classifier. Always respond with valid JSON only."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.3,
+            max_tokens=500
+        )
+        
+        response_text = response.choices[0].message.content.strip()
+        result = json.loads(response_text)
+        
+        # Ensure required fields exist
+        result.setdefault("email_id", email.get("id", "unknown"))
+        result.setdefault("action_type", "skip")
+        result.setdefault("classification", "other")
+        result.setdefault("priority", "medium")
+        result.setdefault("routing_department", "support")
+        result.setdefault("reasoning", "LLM response")
+        
+        return result
+    except Exception as e:
+        print(f"LLM API error: {e}", flush=True)
+        # Fallback to intelligent classification if API fails
+        return classify_email_intelligently(email, task_id)
+
 
 
 def run_task(task_id: str) -> Dict[str, Any]:
