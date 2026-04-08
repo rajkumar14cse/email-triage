@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 from fastapi import FastAPI, HTTPException, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -46,21 +46,24 @@ def list_tasks():
 
 
 @app.post("/reset", response_model=Observation)
-async def reset(request: Optional[ResetRequest] = Body(default=None, embed=False)):
-    if request is None:
-        request = ResetRequest()  # Use defaults
-    if request.task_id not in TASK_REGISTRY:
-        raise HTTPException(status_code=400, detail=f"Unknown task_id '{request.task_id}'")
-    _envs[request.session_id] = EmailTriageEnvironment(task_id=request.task_id)
-    return _envs[request.session_id].reset()
+async def reset(body: Optional[Dict[str, Any]] = Body(default=None)):
+    task_id = body.get("task_id", "task_easy_classify") if body else "task_easy_classify"
+    session_id = body.get("session_id", "default") if body else "default"
+    
+    if task_id not in TASK_REGISTRY:
+        raise HTTPException(status_code=400, detail=f"Unknown task_id '{task_id}'")
+    _envs[session_id] = EmailTriageEnvironment(task_id=task_id)
+    return _envs[session_id].reset()
 
 
 @app.post("/step", response_model=StepResult)
-async def step(request: Optional[StepRequest] = Body(default=None, embed=False)):
-    if request is None:
+async def step(body: Optional[Dict[str, Any]] = Body(default=None)):
+    if body is None or "action" not in body:
         raise HTTPException(status_code=400, detail="Step request body required with action")
-    env = _get_env(request.session_id)
-    return env.step(request.action)
+    
+    session_id = body.get("session_id", "default")
+    env = _get_env(session_id)
+    return env.step(Action(**body["action"]))
 
 
 @app.get("/state", response_model=EnvironmentState)
