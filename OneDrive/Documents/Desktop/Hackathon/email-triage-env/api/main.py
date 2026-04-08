@@ -1,5 +1,5 @@
 from typing import Dict, Optional
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from env.environment import EmailTriageEnvironment, TASK_REGISTRY
@@ -43,7 +43,7 @@ def list_tasks():
 
 
 @app.post("/reset", response_model=Observation)
-def reset(request: Optional[ResetRequest] = None):
+def reset(request: Optional[ResetRequest] = Body(default=None)):
     if request is None:
         request = ResetRequest()  # Use defaults
     if request.task_id not in TASK_REGISTRY:
@@ -53,7 +53,7 @@ def reset(request: Optional[ResetRequest] = None):
 
 
 @app.post("/step", response_model=StepResult)
-def step(request: Optional[StepRequest] = None):
+def step(request: Optional[StepRequest] = Body(default=None)):
     if request is None:
         raise HTTPException(status_code=400, detail="Step request body required with action")
     env = _get_env(request.session_id)
