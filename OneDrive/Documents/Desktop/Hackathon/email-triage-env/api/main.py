@@ -19,19 +19,6 @@ def _get_env(session_id: str, task_id: Optional[str] = None) -> EmailTriageEnvir
     return _envs[session_id]
 
 
-class ResetRequest(BaseModel):
-    task_id: str = "task_easy_classify"
-    session_id: str = "default"
-    
-    class Config:
-        extra = "ignore"
-
-
-class StepRequest(BaseModel):
-    action: Action
-    session_id: str = "default"
-
-
 @app.get("/health")
 def health_check():
     return {"status": "ok", "service": "email-triage-env"}
