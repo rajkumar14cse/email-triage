@@ -47,20 +47,10 @@ def list_tasks():
 
 
 @app.post("/reset", response_model=Observation)
-async def reset(request: Request):
-    """Reset environment - accepts optional JSON body"""
+def reset():
+    """Reset environment - no parameters, always uses defaults"""
     task_id = "task_easy_classify"
     session_id = "default"
-    
-    try:
-        # Try to read body if sent
-        body = await request.json()
-        if isinstance(body, dict):
-            task_id = body.get("task_id", task_id)
-            session_id = body.get("session_id", session_id)
-    except:
-        # No body or invalid JSON - use defaults
-        pass
     
     if task_id not in TASK_REGISTRY:
         raise HTTPException(status_code=400, detail=f"Unknown task_id '{task_id}'")
