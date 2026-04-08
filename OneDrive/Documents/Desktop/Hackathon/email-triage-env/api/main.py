@@ -1,5 +1,5 @@
 from typing import Dict, Optional
-from fastapi import FastAPI, HTTPException, Query, Body
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from env.environment import EmailTriageEnvironment, TASK_REGISTRY
@@ -21,6 +21,9 @@ def _get_env(session_id: str, task_id: Optional[str] = None) -> EmailTriageEnvir
 class ResetRequest(BaseModel):
     task_id: str = "task_easy_classify"
     session_id: str = "default"
+    
+    class Config:
+        extra = "ignore"
 
 
 class StepRequest(BaseModel):
@@ -43,7 +46,7 @@ def list_tasks():
 
 
 @app.post("/reset", response_model=Observation)
-def reset(request: Optional[ResetRequest] = Body(default=None)):
+async def reset(request: Optional[ResetRequest] = None):
     if request is None:
         request = ResetRequest()  # Use defaults
     if request.task_id not in TASK_REGISTRY:
@@ -53,7 +56,7 @@ def reset(request: Optional[ResetRequest] = Body(default=None)):
 
 
 @app.post("/step", response_model=StepResult)
-def step(request: Optional[StepRequest] = Body(default=None)):
+async def step(request: Optional[StepRequest] = None):
     if request is None:
         raise HTTPException(status_code=400, detail="Step request body required with action")
     env = _get_env(request.session_id)
